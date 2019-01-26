@@ -1,0 +1,57 @@
+﻿@using System.Text;
+@using Northwind_Product.Configuration;
+
+@helper TableDisplayColumns(List<MappingField> fields)
+{
+    foreach(var field in fields)
+    {
+        <th>@field.Label</th>
+    }
+}
+
+@helper ProductModalEntry(List<MappingField> fields)
+{
+    foreach (var field in fields)
+    {
+        var id = field.Key;
+        var type = field.Type;
+        <div class="form-row">
+            <label for="@id">@field.Label</label>
+            <div class="input-group">         
+                @if (type == "Text")
+                {
+                    <input type="text" class="form-control textInput" id="@id" style="width: 340px;" />
+                }
+                else if (type == "Currency")
+                {
+                    <span class="input-group-addon">$</span>
+                    <input type="number" value="0" min="0" step="0.01" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency decimalInput" id="@id" style="width: 247px;" />
+                }
+                else if (type == "Number")
+                {
+                    <input type="number" value="1" min="0" step="1" data-number-to-fixed="0" data-number-stepfactor="100" class="form-control number numberInput" id="@id" style="width: 340px;" />
+                }
+            </div>
+        </div>
+    }
+}
+
+@helper JSDataColumns(List<MappingField> fields)
+{
+    var dataColumns = new StringBuilder();
+    fields.ForEach(
+        x => dataColumns.Append("{\"data\": \"" + x.Column + "\"},"));
+
+    var columns = "[" + dataColumns.ToString().TrimEnd(',') + "]";
+    @columns;
+}
+
+@helper JSInput(List<MappingField> fields)
+{ 
+    var inputData = new StringBuilder();
+    fields.ForEach(
+        x => inputData.Append(x.Column + ": $(\"#" + x.Key + "\").val(),"));
+
+    var input = "{" + inputData.ToString().TrimEnd(',') + "}";
+    @input;
+}

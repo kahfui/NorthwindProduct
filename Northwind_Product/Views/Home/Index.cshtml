@@ -1,0 +1,105 @@
+﻿@{  //Dynamic Page based on dynamic configuration from Product.config
+    ViewBag.Title = "Northwind";
+}
+&nbsp;
+@{ //html dynamic object etc
+    var config = GlobalConfig.GetProductConfig();
+    var fields = config.Fields.Where(x => x.Enabled).OrderBy(x => x.Order).ToList();
+    var productTableColumns = ProductHelper.TableDisplayColumns(fields.Where(x => x.Display).ToList());
+    var productModalEntry = ProductHelper.ProductModalEntry(fields.Where(x => x.Input).ToList());
+}
+
+<div>
+    <table id="productList" class="display">
+        <thead>
+            <tr>
+                @productTableColumns
+            </tr>
+        </thead>
+    </table>
+</div>
+
+<div>
+    <input id="btnNew" type="button" class="btn btn-small btn-primary" value="New Product" onclick="OpenModal()" />
+</div>
+
+<div id="modalProduct" class="modal fade" role="dialog">
+    <div class="modal-dialog" style="height: 100px; width: 340px;">
+        <div class="modal-content">
+            <div class="modal-body">
+                @productModalEntry
+                <br />
+                <input id="btnSave" type="button" value="Create" class="btn btn-primary" style="width: 100px" onclick="NewProduct()" />
+                <input id="btnClose" type="button" value="Close" class="btn" style="width: 100px" onclick="CloseModal()" />
+            </div>
+        </div>
+    </div>
+</div>
+<div style="float: right">
+    Go to View: @Html.ActionLink("Index2", "Index2")
+</div>
+
+
+@{ //dynamic js object etc
+    var jsDataColumns = ProductHelper.JSDataColumns(fields).ToString().Replace("&quot;", "\"");
+    var jsInput = ProductHelper.JSInput(fields).ToString().Replace("&quot;", "\"");
+}
+
+@section scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            BindProductList();
+        });
+
+        function BindProductList() {
+            var tableColumns = @Html.Raw(jsDataColumns);
+            $('#productList').DataTable({
+                ordering: true,
+                paging: true,
+                searching: true,
+                ajax: {
+                    url: '/api/AllProducts',
+                    dataSrc: ''
+                },
+                columns: tableColumns
+            });
+        }
+
+        function NewProduct() {
+            var item = @Html.Raw(jsInput);
+            $.ajax({
+                url: '/api/AddDynamicProduct',
+                type: 'POST',
+                dataType: 'json',
+                data: item,
+                success: function (data, textStatus, xhr) {
+                    DefaultProduct();
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    alert("Product not registered.");
+                }
+            });
+        }
+
+        function ResetFields() {
+            $('.modal-body').find('.textInput').val("");
+            $('.modal-body').find('.numberInput').val("1");
+            $('.modal-body').find('.decimalInput').val("0");
+        }
+
+        function DefaultProduct() {
+            ResetFields();
+            $('#productList').DataTable().ajax.reload();
+            CloseModal();
+        }
+
+        function OpenModal() {
+            $('#modalProduct').modal({ backdrop: 'static', keyboard: false });
+        }
+
+        function CloseModal() {
+            $('#modalProduct').modal('hide');
+        }
+    </script>
+}

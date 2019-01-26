@@ -1,0 +1,130 @@
+﻿@{  //Normal Page
+    ViewBag.Title = "Northwind";
+}
+ &nbsp;
+<div>
+    <table id="productList" class="display">
+        <thead>
+            <tr>
+                <th>Product ID</th>
+                <th>Product Name</th>
+                <th>Quantity Per Unit</th>
+                <th>Unit Price</th>
+                <th>Units In Stock</th>
+            </tr>
+        </thead>
+    </table>
+</div>
+
+<div>
+    <input id="btnNew" type="button" class="btn btn-small btn-primary" value="New Product" onclick="OpenModal()" />
+</div>
+
+<div id="modalProduct" class="modal fade" role="dialog">
+    <div class="modal-dialog" style="height: 100px; width: 340px;">
+        <div class="modal-content">
+            <div class="modal-body">
+                <div class="form-row">
+                    <label for="productName">Product Name</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control textInput" id="productName" style="width: 340px;" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label for="quantityPerUnit">Quantity Per Unit</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control textInput" id="quantityPerUnit" style="width: 340px;" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label for="unitPrice">Unit Price</label>
+                    <div class="input-group">
+                        <span class="input-group-addon">$</span>
+                        <input type="number" value="0" min="0" step="0.01" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control currency decimalInput" id="unitPrice" style="width: 247px;" />
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label for="unitsInStock">Units In Stock</label>
+                    <div class="input-group">
+                        <input type="number" value="1" min="0" step="1" data-number-to-fixed="2" data-number-stepfactor="100" class="form-control number numberInput" id="unitsInStock" style="width: 340px;" />
+                    </div>
+                </div>
+                <br />
+                <input id="btnSave" type="button" value="Create" class="btn btn-primary" style="width: 100px" onclick="NewProduct()" />
+                <input id="btnClose" type="button" value="Close" class="btn" style="width: 100px" onclick="CloseModal()" />
+            </div>
+        </div>
+    </div>
+</div>
+<div style="float: right">
+    Go to View: @Html.ActionLink("Index", "Index")
+</div>
+@section scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            BindProductList();
+        });
+
+        function BindProductList() {
+            var tableColumns = [
+                    { "data": "ProductID" },
+                    { "data": "ProductName" },
+                    { "data": "QuantityPerUnit" },
+                    { "data": "UnitPrice" },
+                    { "data": "UnitsInStock" }
+                ]
+            $('#productList').DataTable({
+                ordering: true,
+                paging: true,
+                searching: true,
+                ajax: {
+                    url: '/api/Products',
+                    dataSrc: ''
+                },
+                columns: tableColumns
+            });
+        }
+
+        function NewProduct() {
+            var item = {
+                ProductName: $('#productName').val(),
+                QuantityPerUnit: $('#quantityPerUnit').val(),
+                UnitPrice: $('#unitPrice').val(),
+                UnitsInStock: $('#unitsInStock').val()
+            }
+            $.ajax({
+                url: '/api/AddProduct',
+                type: 'POST',
+                dataType: 'json',
+                data: item,
+                success: function (data, textStatus, xhr) {
+                    DefaultProduct();
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    alert("Product not registered.");
+                }
+            });
+        }
+
+        function ResetFields() {
+            $('.modal-body').find('.textInput').val("");
+            $('.modal-body').find('.numberInput').val("1");
+            $('.modal-body').find('.decimalInput').val("0");
+        }
+
+        function DefaultProduct() {
+            ResetFields();
+            $('#productList').DataTable().ajax.reload();
+            CloseModal();
+        }
+
+        function OpenModal() {
+            $('#modalProduct').modal({ backdrop: 'static', keyboard: false });
+        }
+
+        function CloseModal() {
+            $('#modalProduct').modal('hide');
+        }
+    </script>
+}
